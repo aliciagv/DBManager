@@ -15,31 +15,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
 
-
 /**
  *
  * @author cice
  */
 public class Manager {
-    
-    
-    private static final String DRIVER="com.mysql.jdbc.Driver";
+
+    private static final String DRIVER = "com.mysql.jdbc.Driver";
     private String host, port, user, pass, database, url;
     Connection connection;
 
     public Manager() {
-       this.host="127.0.0.1";
-       this.port="3307";
-       this.user="root";
-       this.pass="root";
-       this.database="java";
-       //jdbc:mysql://localhost:8889/t119
-       this.url="jdbc:mysql://"+host+":"+port+ "/"+database+"?useSSL=false";
-       
-       
+        this.host = "127.0.0.1";
+        this.port = "3307";
+        this.user = "root";
+        this.pass = "root";
+        this.database = "java";
+        //jdbc:mysql://localhost:8889/t119
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
+
     }
 
-    
     public Manager(String host, String port, String user, String pass, String database, String url) {
         this.host = host;
         this.port = port;
@@ -49,22 +45,23 @@ public class Manager {
         this.url = url;
     }
 
-    
-    
     public String getHost() {
         return host;
     }
 
     public void setHost(String host) {
         this.host = host;
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
     }
 
     public String getPort() {
         return port;
+
     }
 
     public void setPort(String port) {
         this.port = port;
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
     }
 
     public String getUser() {
@@ -89,6 +86,7 @@ public class Manager {
 
     public void setDatabase(String database) {
         this.database = database;
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false";
     }
 
     public String getUrl() {
@@ -98,73 +96,66 @@ public class Manager {
     public void setUrl(String url) {
         this.url = url;
     }
-    
-    
+
     private void dbConnect() throws Exception {
         try {
             Class.forName(DRIVER);
-            connection =(Connection) DriverManager.getConnection(url, user, pass);
+            connection = (Connection) DriverManager.getConnection(url, user, pass);
         } catch (ClassNotFoundException | SQLException ex) {
-            throw new Exception("Se ha producido un error al conectar con la DB",ex);
-           
+            throw new Exception("Se ha producido un error al conectar con la DB", ex);
+
         }
-        
+
     }
-    
+
     //insert,update,delete
-    public void executeUpdate(String sql){
-        
+    public void executeUpdate(String sql) {
+
         try {
             dbConnect();
-            
-            Statement st = connection.createStatement();
-            st.executeUpdate(sql);
-            
-            st.close();
+
+            try (Statement st = connection.createStatement()) {
+                st.executeUpdate(sql);
+            }
             dbCloseConnection();
         } catch (Exception ex) {
-            Logger.getLogger(Manager.class.getCanonicalName()).log(Level.SEVERE, ex.getLocalizedMessage(),ex);
+            Logger.getLogger(Manager.class.getCanonicalName()).log(Level.SEVERE, ex.getLocalizedMessage(), ex);
         }
-            
-            
-        
-        
-    
-    
+
     }
-    
-        public ResultSet executeSelect(String sql){
-     
-         ResultSet busqueda=null;
-         
+
+    public ResultSet executeSelect(String sql) {
+
+        ResultSet busqueda = null;
+        CachedRowSet crs =null;
         try {
             dbConnect();
-            CachedRowSetImpl crs =null;
-     
+            
             Statement st = connection.createStatement();
             busqueda = st.executeQuery(sql);
-            crs=new CachedRowSetImpl();
-            crs.populate(busqueda);;
-           
+            if (busqueda!=null){
+                crs = new CachedRowSetImpl();
+                crs.populate(busqueda);
+            }
+
             st.close();
             dbCloseConnection();
-             return crs;
-            
+           
+
         } catch (Exception ex) {
             Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
         }
-         
-         return busqueda;
-     }
-    
-    public void dbCloseConnection() throws Exception{
+
+        return crs;
+    }
+
+    public void dbCloseConnection() throws Exception {
         try {
             connection.close();
         } catch (SQLException ex) {
-             throw new Exception("Se ha producido un error al desconectar con la DB",ex);
+            throw new Exception("Se ha producido un error al desconectar con la DB", ex);
         }
-    
+
     }
-    
-    
+
 }
